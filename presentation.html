@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwitchOps — Hackathon Pitch Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #090A0F;
+      color: #F3F4F6;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    .slide-deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 80px;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      background: radial-gradient(circle at 50% 8%, rgba(99, 102, 241, 0.1) 0%, rgba(9, 10, 15, 1) 75%);
+    }
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Badges */
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      color: #94A3B8;
+    }
+    .badge.purple {
+      border-color: rgba(168, 85, 247, 0.45);
+      background: rgba(168, 85, 247, 0.12);
+      color: #E9D5FF;
+    }
+    .badge.green {
+      border-color: rgba(34, 197, 94, 0.45);
+      background: rgba(34, 197, 94, 0.12);
+      color: #86EFAC;
+    }
+    .badge.blue {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.12);
+      color: #BAE6FD;
+    }
+
+    /* Meta Info Card on Slide 1 */
+    .meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 28px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 13px;
+    }
+    .meta-label {
+      color: #64748B;
+      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+    .meta-value {
+      color: #F8FAFC;
+      font-weight: 600;
+    }
+    .meta-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 58px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.08;
+      text-align: center;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 50%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    h2 {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      text-align: center;
+      color: #FFFFFF;
+    }
+    p.subtitle {
+      font-size: 20px;
+      color: #94A3B8;
+      max-width: 860px;
+      text-align: center;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    /* Cards Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 1150px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+    }
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #F8FAFC;
+      margin-bottom: 8px;
+    }
+    .card-desc {
+      font-size: 14px;
+      color: #94A3B8;
+      line-height: 1.55;
+    }
+
+    /* Architecture Visual Diagram (Slide 2) */
+    .arch-container {
+      width: 100%;
+      max-width: 1100px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.3fr 1.5fr;
+      align-items: center;
+      gap: 16px;
+    }
+    .arch-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .arch-box-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .arch-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .arch-pill:last-child {
+      margin-bottom: 0;
+    }
+    .arch-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #818CF8;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .arch-arrow span {
+      font-size: 11px;
+      color: #94A3B8;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 4px;
+    }
+
+    /* Timeline Stepper (Slide 2 Bottom) */
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 1100px;
+    }
+    .step-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+    }
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #818CF8;
+      margin-bottom: 4px;
+    }
+    .step-title {
+      font-weight: 600;
+      color: #F8FAFC;
+      margin-bottom: 4px;
+    }
+    .step-desc {
+      color: #94A3B8;
+      line-height: 1.4;
+      font-size: 11px;
+    }
+
+    /* Footer Controls */
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      right: 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      backdrop-filter: blur(12px);
+    }
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #FFF;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .slide-counter {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94A3B8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .author-tag {
+      position: fixed;
+      bottom: 24px;
+      left: 36px;
+      font-size: 13px;
+      color: #64748B;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-deck">
+    
+    <!-- SLIDE 1: Title, Team, Problem & Solution -->
+    <section class="slide active" id="slide-1">
+      <div class="badge-row">
+        <span class="badge purple">Flip the Switch Hackathon 2026</span>
+        <span class="badge green">Track 01: Best Business Workflow ($2,000)</span>
+        <span class="badge blue">Switch Protocol</span>
+      </div>
+
+      <h1>SwitchOps</h1>
+      <p class="subtitle" style="margin-bottom: 20px;">AI-Powered Incident Response in Team Chat via Switch.<br>Autonomous diagnosis, verifiable rollbacks, and zero-compromise human approval.</p>
+
+      <!-- Team & Participant Metadata Card -->
+      <div class="meta-bar">
+        <div class="meta-item">
+          <span class="meta-label">Builder</span>
+          <span class="meta-value">Shrushti</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Team Structure</span>
+          <span class="meta-value">Solo Participant (1 Person)</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Team Name</span>
+          <span class="meta-value">Team SwitchOps</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Project</span>
+          <span class="meta-value">SwitchOps</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon">🚨</div>
+          <div class="card-title">The Problem</div>
+          <div class="card-desc">At 2 AM, checkout fails with 94% 500s. On-call engineers face alert fatigue, scrambling across multiple dashboards under pressure.</div>
+        </div>
+        <div class="card" style="border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.05);">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">The Solution</div>
+          <div class="card-desc">Switch brings specialized AI agents directly into the team chat room, turning them from solo CLI tools into active collaborative teammates.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🛡️</div>
+          <div class="card-title">Human Sign-off</div>
+          <div class="card-desc">Strict human safety boundary: the execution agent will never execute a rollback or touch production without human <code>APPROVE</code>.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: Full Architecture & 5-Step Workflow -->
+    <section class="slide" id="slide-2">
+      <div class="badge-row">
+        <span class="badge purple">System Architecture</span>
+        <span class="badge blue">Switch Protocol: SSE In / HTTP Out</span>
+      </div>
+      <h2>SwitchOps System Architecture</h2>
+      <p class="subtitle" style="margin-bottom: 20px;">How human engineers and dual AI agents coordinate through Switch.</p>
+
+      <!-- Architecture Diagram Box -->
+      <div class="arch-container">
+        <div class="arch-grid">
+          
+          <!-- Column 1: Team Chat Room -->
+          <div class="arch-box" style="border-color: rgba(192, 132, 252, 0.4);">
+            <div class="arch-box-title" style="color: #C084FC;">
+              💬 Team Room (#incidents)
+            </div>
+            <div class="arch-pill">
+              <span>👤 <strong>Human Engineer</strong> (You)</span>
+              <span style="color: #FBBF24; font-size: 11px;">Authorizer</span>
+            </div>
+            <div class="arch-pill">
+              <span>🔍 <strong>switchops-radar</strong></span>
+              <span style="color: #C084FC; font-size: 11px;">Diagnosis</span>
+            </div>
+            <div class="arch-pill">
+              <span>⚡ <strong>switchops-ops</strong></span>
+              <span style="color: #34D399; font-size: 11px;">Execution</span>
+            </div>
+          </div>
+
+          <!-- Column 2: The Bridge -->
+          <div class="arch-arrow">
+            <div>⇄</div>
+            <span>Switch Protocol</span>
+          </div>
+
+          <!-- Column 3: Switch Core & Target Infrastructure -->
+          <div class="arch-box" style="border-color: rgba(56, 189, 248, 0.4);">
+            <div class="arch-box-title" style="color: #38BDF8;">
+              ⚙️ Switch Core Engine & Services
+            </div>
+            <div class="arch-pill">
+              <span>🖥️ <strong>Switch Core Engine</strong> (Local Server)</span>
+              <span style="color: #818CF8; font-size: 11px;">Orchestrator</span>
+            </div>
+            <div class="arch-pill">
+              <span>📦 <strong>cart-service</strong> (Simulated App)</span>
+              <span style="color: #F87171; font-size: 11px;">v2.14.0 (Degradable)</span>
+            </div>
+            <div class="arch-pill">
+              <span>📊 <strong>log-server</strong> & <strong>alert-simulator</strong></span>
+              <span style="color: #34D399; font-size: 11px;">Telemetry</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 5-Step Workflow Stepper -->
+      <div class="stepper">
+        <div class="step-item">
+          <div class="step-num">STEP 01</div>
+          <div class="step-title">🚨 Alert Fired</div>
+          <div class="step-desc">Simulator detects 94% error spike; posts into #incidents.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">STEP 02</div>
+          <div class="step-title">🔍 Radar Triage</div>
+          <div class="step-desc">Correlates spike with v2.14.0 deploy; proposes rollback.</div>
+        </div>
+        <div class="step-item" style="border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.05);">
+          <div class="step-num" style="color: #FBBF24;">STEP 03</div>
+          <div class="step-title">👤 Human Gate</div>
+          <div class="step-desc">Ops halts until human types APPROVE in chat.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">STEP 04</div>
+          <div class="step-title">⚡ Ops Rollback</div>
+          <div class="step-desc">Executes rollback; verifies HTTP 200 OK & 0.1% errors.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">STEP 05</div>
+          <div class="step-title">📋 Postmortem</div>
+          <div class="step-desc">Radar automatically generates timeline & follow-ups.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: Value Proposition & Live Demo Transition -->
+    <section class="slide" id="slide-3">
+      <div class="badge-row">
+        <span class="badge green">Live Demonstration</span>
+        <span class="badge purple">100% Reproducible</span>
+      </div>
+      <h2>From Panic to Resolution in Seconds</h2>
+      <p class="subtitle" style="margin-bottom: 28px;">Let's see SwitchOps resolve an active outage live in Switch Console.</p>
+
+      <div class="grid-3" style="margin-bottom: 32px;">
+        <div class="card">
+          <div class="card-icon">⏱️</div>
+          <div class="card-title">90% MTTR Reduction</div>
+          <div class="card-desc">Automated root-cause correlation and instant rollback reduces mean time to resolution from hours to seconds.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔒</div>
+          <div class="card-title">Auditability & Safety</div>
+          <div class="card-desc">Every action, diagnosis, human approval, and postmortem timeline is permanently preserved in the chat log.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🐳</div>
+          <div class="card-title">Single Command Run</div>
+          <div class="card-desc">Fully containerized with Docker Compose. Any judge can clone and reproduce the live demo with <code>docker compose up</code>.</div>
+        </div>
+      </div>
+
+      <div style="font-size: 18px; color: #E2E8F0; font-weight: 600; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); padding: 14px 28px; border-radius: 12px;">
+        👉 Switching over to Switch Console for the live demo walkthrough...
+      </div>
+    </section>
+
+  </div>
+
+  <div class="author-tag">SwitchOps • Shrushti • Solo Team • Flip the Switch Hackathon 2026</div>
+
+  <div class="controls">
+    <button class="nav-btn" onclick="prevSlide()" title="Previous slide (←)">❮</button>
+    <span class="slide-counter" id="counter">1 / 3</span>
+    <button class="nav-btn" onclick="nextSlide()" title="Next slide (→)">❯</button>
+  </div>
+
+  <script>
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('counter');
+
+    function showSlide(index) {
+      slides[current].classList.remove('active');
+      current = (index + slides.length) % slides.length;
+      slides[current].classList.add('active');
+      counter.textContent = `${current + 1} / ${slides.length}`;
+    }
+
+    function nextSlide() { showSlide(current + 1); }
+    function prevSlide() { showSlide(current - 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>
