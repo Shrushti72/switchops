@@ -1,12 +1,36 @@
 # SwitchOps — AI-Powered Incident Response in Team Chat
 
-> **Flip the Switch Hackathon 2026 Submission** — Track 01: Best Business Workflow
+<p align="center">
+  <img src="https://img.shields.io/badge/Hackathon-Flip%20the%20Switch%202026-blueviolet?style=for-the-badge" alt="Hackathon" />
+  <img src="https://img.shields.io/badge/Track-01%3A%20Best%20Business%20Workflow-success?style=for-the-badge" alt="Track" />
+  <img src="https://img.shields.io/badge/Platform-Switch%20Protocol-orange?style=for-the-badge" alt="Switch" />
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
+</p>
+
+> **Flip the Switch Hackathon 2026 Submission** — Track 01: Best Business Workflow ($2,000)
 
 SwitchOps brings AI coding agents directly into your team's chat channel (Mattermost, Slack, Discord, or Microsoft Teams) via [Switch](https://github.com/sandbox-quantum/switch). 
 
 When a production incident occurs, the agents collaborate in real time to diagnose root causes, propose verifiable remediations, and **strictly enforce human sign-off (`APPROVE`)** before taking any operational action.
 
 **Real incidents, diagnosed and resolved in chat. Humans stay firmly in control.**
+
+---
+
+## 📺 Demo Video
+
+> 🎥 **[Watch the 2-Minute SwitchOps Demo Walkthrough](https://youtu.be/placeholder)** *(Recording linked during hackathon submission)*
+
+---
+
+## ⚖️ How SwitchOps Maps to the Judging Criteria
+
+| Hackathon Criterion | Weight | How SwitchOps Delivers |
+|---|---|---|
+| **Use of Switch** | **30%** | **Central to the entire system.** Switch connects the team chat room to two specialized agents (`switchops-radar` & `switchops-ops`) via SSE/HTTP. Without Switch, agents have no shared context, cannot message each other, and cannot reach human engineers. |
+| **Technical Execution** | **25%** | **Production-grade & reproducible.** Multi-agent orchestration, automated tool execution (log inspection & rollback), strict state machine enforcement (`APPROVE`), and zero-config local reproduction via Docker Compose. |
+| **Creativity & Impact** | **25%** | **Addresses the #1 pain point in engineering:** on-call burnout and high MTTR. Matches the hackathon benchmark scenario 1:1, transforming chaos into an auditable, collaborative workflow. |
+| **Presentation** | **20%** | **Comprehensive documentation:** clear architecture diagrams, reproducible quick-start guides, and automated postmortems. |
 
 ---
 
@@ -111,9 +135,14 @@ docker compose up -d --build
 ```
 
 ### 3. Trigger an Incident
-```bash
-bash scripts/break-cart.sh
-```
+* **On Linux / macOS**:
+  ```bash
+  bash scripts/break-cart.sh
+  ```
+* **On Windows PowerShell**:
+  ```powershell
+  .\scripts\break-cart.ps1
+  ```
 *(Or post a simulated alert message directly into `#incidents`).*
 
 ### 4. Review & Resolve
@@ -142,8 +171,10 @@ switchops/
 │       ├── app.py
 │       └── Dockerfile
 └── scripts/
-    ├── break-cart.sh            # Injects 500 error spike into cart-service
-    └── fix-cart.sh              # Restores service to nominal state
+    ├── break-cart.sh            # Injects 500 error spike into cart-service (Bash)
+    ├── break-cart.ps1           # Injects 500 error spike into cart-service (PowerShell)
+    ├── fix-cart.sh              # Restores service to nominal state (Bash)
+    └── fix-cart.ps1             # Restores service to nominal state (PowerShell)
 ```
 
 ---
