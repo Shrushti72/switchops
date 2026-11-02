@@ -1,0 +1,66 @@
+version: "3.9"
+
+# SwitchOps — Full Demo Stack
+# Run: docker-compose up --build
+# This starts:
+#   - cart-service     (the service that "breaks" to simulate an incident)
+#   - log-server       (returns structured fake logs for agents to read)
+#   - alert-simulator  (fires webhook to Switch Core when cart-service degrades)
+#
+# NOTE: Switch Core itself is run via Switch Console (desktop app).
+# Set SWITCH_CORE_URL and SWITCH_WEBHOOK_TOKEN in a .env file.
+
+services:
+  # ─── Demo: The "production" service that can be broken ───────────────────
+  cart-service:
+    build:
+      context: ./demo-services/cart-service
+      dockerfile: Dockerfile
+    container_name: switchops-cart
+    ports:
+      - "8001:8001"
+    environment:
+      - FAIL_RATE=0.0           # Set to 1.0 to simulate incident (break-cart.sh does this)
+      - SERVICE_VERSION=v2.14.0 # Current deployed version
+      - PORT=8001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # ─── Demo: Log server — agents query this for recent logs ────────────────
+  log-server:
+    build:
+      context: ./demo-services/log-server
+      dockerfile: Dockerfile
+    container_name: switchops-logs
+    ports:
+      - "8080:8080"
+    depends_on:
+      - cart-service
+    environment:
+      - CART_SERVICE_URL=http://cart-service:8001
+
+  # ─── Demo: Alert simulator — fires webhooks when errors spike ────────────
+  alert-simulator:
+    build:
+      context: ./alert-simulator
+      dockerfile: Dockerfile
+    container_name: switchops-alerts
+    depends_on:
+      - cart-service
+      - log-server
+    environment:
+      - CART_SERVICE_URL=http://cart-service:8001
+      - SWITCH_CORE_URL=${SWITCH_CORE_URL:-http://host.docker.internal:2468}
+      - SWITCH_WEBHOOK_TOKEN=${SWITCH_WEBHOOK_TOKEN}
+      - SWITCH_ROOM_ID=${SWITCH_ROOM_ID}
+      - POLL_INTERVAL_SECONDS=10
+      - ERROR_THRESHOLD=0.05    # Alert when error rate > 5%
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Reach Switch Core on host machine
+
+networks:
+  default:
+    name: switchops-network
