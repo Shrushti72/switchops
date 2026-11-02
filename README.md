@@ -1,208 +1,163 @@
-# SwitchOps — AI-Powered Incident Response
+# SwitchOps — AI-Powered Incident Response in Team Chat
 
-> **Flip the Switch Hackathon 2026 submission** — Track 01: Best Business Workflow
+> **Flip the Switch Hackathon 2026 Submission** — Track 01: Best Business Workflow
 
-SwitchOps puts two Antigravity AI agents into your team's Discord channel via [Switch](https://github.com/sandbox-quantum/switch). When production breaks, the agents diagnose the problem, propose a fix, and wait for a human to say **APPROVE** before touching anything.
+SwitchOps brings AI coding agents directly into your team's chat channel (Mattermost, Slack, Discord, or Microsoft Teams) via [Switch](https://github.com/sandbox-quantum/switch). 
 
-**Real incidents, resolved in chat. Humans stay in control.**
+When a production incident occurs, the agents collaborate in real time to diagnose root causes, propose verifiable remediations, and **strictly enforce human sign-off (`APPROVE`)** before taking any operational action.
 
----
-
-## Demo
-
-```
-🚨 ALERT: cart-service error rate 94% since 09:42
-
-⚡ [switchops-radar] Incident detected: cart-service 500 spike
-   @switchops-ops please fetch last 50 logs for cart-service
-
-📋 [switchops-ops] Here are the last 10 lines:
-   2026-11-04T09:42:03Z ERROR [cart-service] NullPointerException in checkout
-   2026-11-04T09:42:01Z INFO  [deploy-agent] Deployed v2.14.0 (was v2.13.2)
-   ...
-
-🔴 [switchops-radar] INCIDENT: cart-service
-   ⏰ Started: 09:42 UTC
-   📊 Error rate: 94% (normal: <1%)
-   🔍 Root cause: v2.14.0 deployed at 09:40, null pointer in checkout handler
-   🔧 Proposed fix: Rollback to v2.13.2
-   ──────────────────────────────────
-   Type APPROVE to execute or REJECT to escalate.
-
-> [You] APPROVE
-
-✅ [switchops-ops] Rolled back cart-service to v2.13.2.
-   Error rate: 0.2% ✓
-
-📋 [switchops-radar] Postmortem — cart-service — 2026-11-04
-   • What happened: 500 spike to 94% after v2.14.0 deploy
-   • Started at: 09:42 UTC, resolved 09:44 UTC (2 min MTTR)
-   • Root cause: null pointer in checkout handler (v2.14.0)
-   • Fix applied: rollback to v2.13.2 (approved by @you)
-   • Action item: add null check before merging v2.14.0 again
-```
+**Real incidents, diagnosed and resolved in chat. Humans stay firmly in control.**
 
 ---
 
-## Architecture
+## 🎬 Live Incident Flow
 
-```
-                    ┌──────────────────────────────────┐
-                    │         Discord Channel            │
-                    │    #switchops-incidents            │
-                    │                                    │
-                    │  👤 You (human on-call)            │
-                    │  🤖 switchops-radar (Antigravity)  │
-                    │  🔧 switchops-ops   (Antigravity)  │
-                    └──────────────┬───────────────────┘
-                                   │ Switch bridges Discord ↔ agents
-                    ┌──────────────▼───────────────────┐
-                    │         Switch Core               │
-                    │    (runs locally via Console)      │
-                    │                                    │
-                    │  SSE stream  ──► Agents            │
-                    │  HTTP POST   ◄── Agents reply      │
-                    └──────────────┬───────────────────┘
-                                   │
-          ┌────────────────────────┼────────────────────────┐
-          ▼                        ▼                        ▼
-  ┌───────────────┐   ┌────────────────────┐  ┌─────────────────────┐
-  │  cart-service │   │    log-server      │  │  alert-simulator    │
-  │  (Docker)     │   │    (Docker)        │  │  (Docker)           │
-  │               │   │                    │  │                     │
-  │  FAIL_RATE=0  │   │  GET /logs?service │  │  Polls cart every   │
-  │  → healthy    │   │  Returns structured│  │  10s. Fires Switch  │
-  │               │   │  logs with errors  │  │  webhook on spike.  │
-  │  FAIL_RATE=1  │   │  highlighted       │  │                     │
-  │  → incident   │   └────────────────────┘  └─────────────────────┘
-  └───────────────┘
+```text
+🚨 [Alert Simulator] 
+   ALERT: cart-service error rate spiked to 94.2% (threshold: 5.0%) at 09:42 UTC.
+   Deploy v2.14.0 was released at 09:40 UTC. @switchops-radar please investigate.
+
+🔍 [switchops-radar BOT]
+   The timing strongly points to v2.14.0 as the trigger: cart-service error rate 
+   reached 94.2% two minutes after release. 
+   Recommendation: Roll back to v2.13.2. 
+   ⚠️ Ops should execute ONLY after a human posts APPROVE here.
+
+👤 [Human Engineer]
+   APPROVE
+
+🤖 [switchops-radar BOT]
+   @switchops-ops Human approval received in the channel. 
+   Please execute the approved rollback to v2.13.2 and confirm completion here.
+
+⚡ [switchops-ops BOT]
+   Worked for 7s. 2 tool calls.
+   ✅ Executed rollback: cart-service restored to v2.13.2.
+   Health check: HTTP 200 OK
+   Error rate: 0.1% (nominal)
+   Incident resolved.
+
+📋 [switchops-radar BOT]
+   Cart-Service Incident Postmortem
+   • Summary: Error spike mitigated, rollback to v2.13.2 verified (HTTP 200, 0.1% errors).
+   • Timeline (UTC): 09:40 deploy -> 09:42 alert -> Human APPROVE -> Ops rollback.
+   • Root Cause: v2.14.0 checkout regression.
+   • Action Items: Inspect v2.14.0 logs/traces before re-deploying.
 ```
 
 ---
 
-## Why Switch is Central
+## 🏗️ Architecture
 
-Without Switch, this workflow doesn't exist. Switch is what:
-1. **Puts agents in the chat room** — without it, Antigravity can't see team messages
-2. **Gives agents shared context** — both agents see the same incident thread
-3. **Routes @mentions between agents** — Radar tells Ops to fetch logs via Switch
-4. **Surfaces the APPROVE/REJECT gate** — the human's approval happens in Switch's room
-
-Remove Switch and you have two agents that can't talk to anyone.
+```text
+                      ┌────────────────────────────────────────┐
+                      │          Team Chat Channel             │
+                      │             #incidents                 │
+                      │                                        │
+                      │  👤 Human On-Call Engineer             │
+                      │  🔍 switchops-radar (Diagnosis Agent)  │
+                      │  ⚡ switchops-ops   (Execution Agent)  │
+                      └───────────────────┬────────────────────┘
+                                          │
+                            Switch Protocol (SSE in, HTTP out)
+                                          │
+                      ┌───────────────────▼────────────────────┐
+                      │              Switch Core               │
+                      │        (Switch Console Engine)         │
+                      │                                        │
+                      │  - Room Context Isolation              │
+                      │  - Multi-Agent Orchestration           │
+                      │  - Human-in-the-Loop Safety Gate       │
+                      └───────────────────┬────────────────────┘
+                                          │
+               ┌──────────────────────────┼──────────────────────────┐
+               ▼                          ▼                          ▼
+      ┌─────────────────┐       ┌───────────────────┐      ┌───────────────────┐
+      │  cart-service   │       │    log-server     │      │  alert-simulator  │
+      │  (Docker)       │       │    (Docker)       │      │  (Docker)         │
+      │                 │       │                   │      │                   │
+      │  FAIL_RATE=0.0  │       │  GET /logs        │      │  Polls metrics    │
+      │  → healthy      │       │  Returns recent   │      │  every 10s.       │
+      │  FAIL_RATE=1.0  │       │  structured logs  │      │  Fires webhook    │
+      │  → 500 incident │       │  with deploy info │      │  on threshold spike│
+      └─────────────────┘       └───────────────────┘      └───────────────────┘
+```
 
 ---
 
-## Quick Start (5 minutes)
+## 💡 Why Switch is Central
+
+Without Switch, this workflow cannot exist:
+1. **Shared Team Context**: Agents and humans share the exact same room timeline, rules, and history.
+2. **Agent-to-Agent Coordination**: `switchops-radar` and `switchops-ops` communicate in-thread via Switch addressing.
+3. **Strict Human Safety Gate**: `switchops-ops` listens to the channel but enforces human sign-off before executing any operational change.
+4. **Platform Agnostic**: Works seamlessly whether the team uses Mattermost (zero-config local Docker), Slack, Discord, or Microsoft Teams.
+
+---
+
+## 🚀 Quick Start (One Command)
 
 ### Prerequisites
-- [Switch Console](https://github.com/sandbox-quantum/switch/releases/latest/download/switch-console-x64.exe) (Windows)
+- [Switch Console](https://github.com/sandbox-quantum/switch/releases)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- A Discord server (or Slack workspace)
 
-### Step 1 — Set up Switch
+### 1. Load Room in Switch Console
+* In Switch Console, click **File → Load Room Template** (or import `room.yaml`).
+* Switch automatically configures `#incidents` with `switchops-radar` and `switchops-ops`.
 
-1. Install Switch Console and open it
-2. Talk to `switch-buddy`: *"Create two agents called switchops-radar and switchops-ops, connect them to Discord"*
-3. Or load `room.yaml` directly via **File → Load Room Template**
-4. Note your **Room ID** and **Webhook Token** from the Console
-
-### Step 2 — Configure environment
-
+### 2. Run the Demo Stack
 ```bash
-cp .env.example .env
-# Edit .env and fill in SWITCH_ROOM_ID and SWITCH_WEBHOOK_TOKEN
+docker compose up -d --build
 ```
 
-### Step 3 — Start the demo stack
-
-```bash
-docker compose up --build
-```
-
-This starts:
-- `cart-service` on port 8001 (healthy by default)
-- `log-server` on port 8080
-- `alert-simulator` on port 9000 (polling every 10s)
-
-### Step 4 — Trigger an incident
-
+### 3. Trigger an Incident
 ```bash
 bash scripts/break-cart.sh
 ```
+*(Or post a simulated alert message directly into `#incidents`).*
 
-Watch your Discord channel — the alert fires in ~10 seconds and the agents take over.
-
-### Step 5 — Approve the fix
-
-When `switchops-radar` posts the diagnosis card, type **APPROVE** in Discord.
-
-### Step 6 — Recover
-
-```bash
-bash scripts/fix-cart.sh
-```
-
-Or just type APPROVE in chat after the agents propose the rollback.
+### 4. Review & Resolve
+1. Review `switchops-radar`'s root-cause analysis in chat.
+2. Type **`APPROVE`** in `#incidents`.
+3. Watch `switchops-ops` execute the rollback and verify recovery.
+4. Request the postmortem: `@switchops-radar generate postmortem`.
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
-```
+```text
 switchops/
-├── room.yaml                    # Switch room config (v2 format)
-├── docker-compose.yml           # Full demo stack
-├── .env.example                 # Config template
-├── alert-simulator/
-│   ├── main.py                  # FastAPI — polls cart, fires Switch webhooks
+├── room.yaml                    # Switch room template (v2 declarative format)
+├── docker-compose.yml           # Full demo services stack
+├── README.md                    # Architecture and documentation
+├── alert-simulator/             # Webhook service that monitors and triggers alerts
+│   ├── main.py
 │   └── Dockerfile
 ├── demo-services/
-│   ├── cart-service/
-│   │   ├── app.py               # Flask — FAIL_RATE env var controls errors
+│   ├── cart-service/            # Simulated production service (degradable on demand)
+│   │   ├── app.py
 │   │   └── Dockerfile
-│   └── log-server/
-│       ├── app.py               # Returns structured logs with error injection
+│   └── log-server/              # Structured log emitter with deploy markers
+│       ├── app.py
 │       └── Dockerfile
 └── scripts/
-    ├── break-cart.sh            # Triggers the incident
-    └── fix-cart.sh              # Simulates rollback recovery
+    ├── break-cart.sh            # Injects 500 error spike into cart-service
+    └── fix-cart.sh              # Restores service to nominal state
 ```
 
 ---
 
-## How the Agents Work
+## 🛠️ Built With
 
-### switchops-radar (Incident Radar)
-- **Addressing:** `anyone` — responds to any message in the room
-- **Trigger:** Alert messages containing 🚨 or keywords like "error rate", "500", "timeout"
-- **Actions:**
-  1. Acknowledge + triage
-  2. Request logs from ops
-  3. Analyze + propose ONE fix
-  4. Post structured diagnosis card
-  5. Gate on human APPROVE/REJECT
-  6. Write postmortem after resolution
-
-### switchops-ops (Ops Executor)
-- **Addressing:** `owner_and_owner_agents` — only responds to Radar + room owner
-- **Actions:**
-  1. Fetch logs from log-server when Radar asks
-  2. Execute rollback/restart/scale ONLY after APPROVE relayed by Radar
-  3. Post confirmation with output
+* **[Switch](https://github.com/sandbox-quantum/switch)** — Open-source agent collaboration infrastructure
+* **AI Coding Agents** — Powered by OpenAI Codex / Antigravity via Switch Protocol
+* **Mattermost / Slack** — Native team chat interfaces
+* **FastAPI & Flask** — Microservice simulators
+* **Docker Compose** — 100% reproducible local environment
 
 ---
 
-## Built With
+## 📜 License
 
-| Technology | Role |
-|---|---|
-| [Switch](https://github.com/sandbox-quantum/switch) | Connects agents to Discord; shared room context |
-| [Antigravity](https://www.antigravity.ai) | AI agent powering both Radar and Ops |
-| FastAPI + Flask | Alert simulator + demo microservices |
-| Docker Compose | One-command reproducible environment |
-
----
-
-## License
-
-MIT — clone it, fork it, run it, ship it.
+MIT License — free to use, modify, and reproduce.
