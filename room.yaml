@@ -8,16 +8,16 @@ description: >
 inputs:
   agent_provider:
     type: string
-    description: "Which coding agent backs both agents (claude, codex, opencode)"
-    default: "claude"
+    description: "Which coding agent backs both agents (codex, claude, opencode)"
+    default: "codex"
   machine_target:
     type: string
     description: "Execution environment"
     default: "local"
   bridge_app:
     type: string
-    description: "Chat platform to mirror the room into (discord, slack, teams)"
-    default: "slack"
+    description: "Chat platform to mirror the room into (mattermost, slack, discord, teams)"
+    default: "mattermost"
 
 resources:
   radar_agent:

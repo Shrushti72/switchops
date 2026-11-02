@@ -17,6 +17,6 @@ FAIL_RATE=1.0 SERVICE_VERSION=v2.14.0 docker compose up -d cart-service
 echo "✅ cart-service is now returning 500s"
 echo "   The alert simulator will detect this in ~10s and fire the alert to Switch."
 echo ""
-echo "   Watch your Discord channel for @switchops-radar to respond!"
+echo "   Watch your #incidents channel for @switchops-radar to respond!"
 echo ""
 echo "   To recover: ./scripts/fix-cart.sh"
