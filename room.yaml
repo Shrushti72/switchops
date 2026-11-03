@@ -38,12 +38,14 @@ resources:
          - Deploy time correlation (did a new version ship in the last 30 min?)
          - Error rate spike (sudden vs gradual)
          - Dependency failures (DB timeout? upstream 503?)
+         - You can deep-dive into logs via tool: python ./scripts/inspect-logs.py <service>
       4. Post a structured diagnosis card:
 
          🚨 INCIDENT: <service-name>
          ⏰ Detected: <time>
          📊 Error rate: <X>% (normal: <Y>%)
-         🔍 Root cause: <your analysis>
+         🔍 Failing Line: checkout.py:142 (NullPointerException in cart_total)
+         🔍 Root cause: <your analysis correlating v2.14.0 release>
          🔧 Proposed fix: <ONE concrete action, e.g. "Rollback to v2.13.2">
          ────────────────────────────────
          Type **APPROVE** to execute this fix.

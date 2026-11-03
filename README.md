@@ -112,10 +112,33 @@ When a production incident occurs, the agents collaborate in real time to diagno
 ## 💡 Why Switch is Central
 
 Without Switch, this workflow cannot exist:
-1. **Shared Team Context**: Agents and humans share the exact same room timeline, rules, and history.
-2. **Agent-to-Agent Coordination**: `switchops-radar` and `switchops-ops` communicate in-thread via Switch addressing.
-3. **Strict Human Safety Gate**: `switchops-ops` listens to the channel but enforces human sign-off before executing any operational change.
-4. **Platform Agnostic**: Works seamlessly whether the team uses Mattermost (zero-config local Docker), Slack, Discord, or Microsoft Teams.
+1. **State Persistence & Resilience**: Switch maintains an immutable append-only event log for every room. If `switchops-ops` or `switchops-radar` crashes or restarts mid-incident, it rejoins the room, replays unhandled events, detects that human `APPROVE` was granted, and resumes execution seamlessly without requiring manual re-triage.
+2. **Shared Team Context**: Agents and humans share the exact same room timeline, rules, and history.
+3. **Agent-to-Agent Coordination**: `switchops-radar` and `switchops-ops` communicate in-thread via Switch addressing (`anyone` and `owner_and_owner_agents`).
+4. **Strict Human Safety Gate**: `switchops-ops` listens to the channel but enforces human sign-off before executing any operational change.
+5. **Platform Agnostic**: Works seamlessly whether the team uses Mattermost (zero-config local Docker), Slack, Discord, or Microsoft Teams.
+
+---
+
+## 🎙️ Voice-Activated DevOps with Wispr Flow
+
+SwitchOps integrates with **[Wispr Flow](https://flow.wispr.ai)** for hands-free incident response:
+* On-call engineers use `Ctrl + Win` to voice-dictate approvals (`"APPROVE"`) and commands (`"@switchops-radar generate incident postmortem"`).
+* Reduces human reaction latency under high-pressure 2:00 AM outages.
+
+---
+
+## 🔬 Advanced Tool Execution: Log Deep-Dive
+
+Rather than basic keyword matching, `switchops-radar` leverages a specialized diagnostic tool (`scripts/inspect-logs.py` / `scripts/inspect-logs.ps1`) to parse JSON logs and locate the exact crash line:
+```json
+{
+  "service": "cart-service",
+  "primary_failing_line": "checkout.py:142 (NullPointerException in cart_total)",
+  "root_cause_isolated": "NullPointerException in cart_total() -> None.items()",
+  "recommended_action": "Rollback to v2.13.2"
+}
+```
 
 ---
 
@@ -146,9 +169,9 @@ docker compose up -d --build
 *(Or post a simulated alert message directly into `#incidents`).*
 
 ### 4. Review & Resolve
-1. Review `switchops-radar`'s root-cause analysis in chat.
-2. Type **`APPROVE`** in `#incidents`.
-3. Watch `switchops-ops` execute the rollback and verify recovery.
+1. Review `switchops-radar`'s root-cause analysis in chat (identifying `checkout.py:142`).
+2. Type (or voice-dictate with Wispr Flow) **`APPROVE`** in `#incidents`.
+3. Watch `switchops-ops` execute the rollback (`scripts/rollback.sh` / `scripts/rollback.ps1`) and verify recovery.
 4. Request the postmortem: `@switchops-radar generate postmortem`.
 
 ---
@@ -160,6 +183,7 @@ switchops/
 ├── room.yaml                    # Switch room template (v2 declarative format)
 ├── docker-compose.yml           # Full demo services stack
 ├── README.md                    # Architecture and documentation
+├── BLOG_POST.md                 # Full technical article for Hackathon Blog Track
 ├── alert-simulator/             # Webhook service that monitors and triggers alerts
 │   ├── main.py
 │   └── Dockerfile
@@ -174,7 +198,11 @@ switchops/
     ├── break-cart.sh            # Injects 500 error spike into cart-service (Bash)
     ├── break-cart.ps1           # Injects 500 error spike into cart-service (PowerShell)
     ├── fix-cart.sh              # Restores service to nominal state (Bash)
-    └── fix-cart.ps1             # Restores service to nominal state (PowerShell)
+    ├── fix-cart.ps1             # Restores service to nominal state (PowerShell)
+    ├── rollback.sh              # Production rollback execution script (Bash)
+    ├── rollback.ps1             # Production rollback execution script (PowerShell)
+    ├── inspect-logs.py          # Log deep-dive parsing tool (Python)
+    └── inspect-logs.ps1         # Log deep-dive parsing tool (PowerShell)
 ```
 
 ---
