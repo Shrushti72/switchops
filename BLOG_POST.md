@@ -1,6 +1,13 @@
 # Building SwitchOps: Autonomous, Zero-Downtime Incident Response in Team Chat via Switch
 
-> *Submitted for the **Flip the Switch Hackathon 2026** (Track 01: Best Business Workflow & Best Tutorial Blog)*
+<p align="left">
+  <img src="https://img.shields.io/badge/Hackathon-Flip%20the%20Switch%202026-blueviolet?style=flat-square" alt="Hackathon" />
+  <img src="https://img.shields.io/badge/Powered%20by-Switch%20Protocol-orange?style=flat-square" alt="Switch" />
+  <img src="https://img.shields.io/badge/Voice%20by-Wispr%20Flow-6A0DAD?style=flat-square" alt="Wispr Flow" />
+  <img src="https://img.shields.io/badge/Organized%20by-WeMakeDevs-blue?style=flat-square" alt="WeMakeDevs" />
+</p>
+
+> 🏆 *This project was built for the **Flip the Switch Hackathon 2026** hosted by **WeMakeDevs**, utilizing the **Switch** multi-agent protocol and **Wispr Flow** voice dictation for Track 01 (Best Business Workflow) and the Best Tutorial Blog track.*
 
 ---
 
