@@ -19,7 +19,7 @@ When a production incident occurs, the agents collaborate in real time to diagno
 
 ## 📺 Demo Video
 
-> 🎥 **[Watch the 2-Minute SwitchOps Demo Walkthrough](https://youtu.be/placeholder)** *(Recording linked during hackathon submission)*
+> 🎥 **[Watch the 3-Minute SwitchOps Demo Walkthrough](https://youtu.be/YOUR_VIDEO_ID)**
 
 ---
 
@@ -28,7 +28,7 @@ When a production incident occurs, the agents collaborate in real time to diagno
 | Hackathon Criterion | Weight | How SwitchOps Delivers |
 |---|---|---|
 | **Use of Switch** | **30%** | **Central to the entire system.** Switch connects the team chat room to two specialized agents (`switchops-radar` & `switchops-ops`) via SSE/HTTP. Without Switch, agents have no shared context, cannot message each other, and cannot reach human engineers. |
-| **Technical Execution** | **25%** | **Production-grade & reproducible.** Multi-agent orchestration, automated tool execution (log inspection & rollback), strict state machine enforcement (`APPROVE`), and zero-config local reproduction via Docker Compose. |
+| **Technical Execution** | **25%** | **Reproducible.** Multi-agent orchestration, tool execution (rollback and health check), a human approval gate (`APPROVE`), and local reproduction via Docker Compose. |
 | **Creativity & Impact** | **25%** | **Addresses the #1 pain point in engineering:** on-call burnout and high MTTR. Matches the hackathon benchmark scenario 1:1, transforming chaos into an auditable, collaborative workflow. |
 | **Presentation** | **20%** | **Comprehensive documentation:** clear architecture diagrams, reproducible quick-start guides, and automated postmortems. |
 
@@ -43,7 +43,8 @@ When a production incident occurs, the agents collaborate in real time to diagno
 
 🔍 [switchops-radar BOT]
    The timing strongly points to v2.14.0 as the trigger: cart-service error rate 
-   reached 94.2% two minutes after release. 
+   reached 94.2% two minutes after release. This is a correlation-based diagnosis,
+   as no deployment logs or traces are in the room. 
    Recommendation: Roll back to v2.13.2. 
    ⚠️ Ops should execute ONLY after a human posts APPROVE here.
 
@@ -54,8 +55,10 @@ When a production incident occurs, the agents collaborate in real time to diagno
    @switchops-ops Human approval received in the channel. 
    Please execute the approved rollback to v2.13.2 and confirm completion here.
 
+👤 [Human Engineer]
+   execute rollback to v2.13.2
+
 ⚡ [switchops-ops BOT]
-   Worked for 7s. 2 tool calls.
    ✅ Executed rollback: cart-service restored to v2.13.2.
    Health check: HTTP 200 OK
    Error rate: 0.1% (nominal)
@@ -91,7 +94,7 @@ When a production incident occurs, the agents collaborate in real time to diagno
                       │                                        │
                       │  - Room Context Isolation              │
                       │  - Multi-Agent Orchestration           │
-                      │  - Human-in-the-Loop Safety Gate       │
+                      │  - Shared Room History                 │
                       └───────────────────┬────────────────────┘
                                           │
                ┌──────────────────────────┼──────────────────────────┐
@@ -109,13 +112,48 @@ When a production incident occurs, the agents collaborate in real time to diagno
 
 ---
 
+## 🔌 How It All Connects: Switch, Mattermost & Docker Desktop
+
+### 1. Getting Started with Switch
+* **Switch Console Installation:** Downloaded and installed Switch Console (v0.40.1) from [sandbox-quantum/switch](https://github.com/sandbox-quantum/switch).
+* **Local Switch Server:** Launched the local Switch daemon (`Local Switch server - This computer`) which boots the core Switch coordination protocol engine (v0.31.0) on `localhost`.
+* **Agent Integration:** Connected coding agents (`switchops-radar` and `switchops-ops`) backed by LLM providers (Codex / OpenAI / Claude) with dedicated local workspaces (`./workspace-radar` and `./workspace-ops`).
+
+### 2. How Rooms Are Created
+Rooms in Switch represent isolated, stateful collaboration spaces. We defined the `#incidents` room in two ways:
+* **Declarative Template (`room.yaml`):** Switch supports declarative version 2 YAML manifests specifying room name, topic, kickoff greeting, and participant permissions:
+  ```yaml
+  incidents_room:
+    type: room
+    bridge: "mattermost"
+    participants:
+      - "{$creator}"
+      - "{radar_agent.name}"
+      - "{ops_agent.name}"
+    topic: "🚨 SwitchOps — AI incident response. Humans approve. Agents act."
+  ```
+* **Switch Console UI:** Under **Your Rooms → Create Room** (or **File → Load Room Template**), importing `room.yaml` automatically instantiates the `#incidents` channel, maps participant roles, and wires up agent addressing rules (`anyone` for Radar, `owner_and_owner_agents` for Ops).
+
+### 3. How Switch Connects to Mattermost
+* **Bi-directional Bridge:** Switch features a native chat bridge connector that mirrors room activity directly into team chat.
+* **Real-time Event Streaming:** Switch listens to the room via Server-Sent Events (SSE) and translates agent outputs into native Mattermost chat posts via the Mattermost REST API and WebSocket gateway.
+* **Unified Human-Agent Experience:** Human engineers see alerts and agents as standard team members with bot badges, enabling seamless `@mentions` and threaded conversations.
+
+### 4. How Docker Desktop Integrates with the System
+Docker Desktop acts as the execution substrate for both the chat infrastructure and the simulated application stack:
+* **Switch-to-Docker Engine Socket:** Switch Console communicates directly with the Docker daemon via the Docker Engine named pipe (`//./pipe/dockerDesktopLinuxEngine` on Windows) to automatically provision and manage the embedded Mattermost container.
+* **Microservices Stack (`docker-compose.yml`):** Runs the mock production environment (`cart-service` on port 5001, `log-server` on port 8080, and `alert-simulator`).
+* **Operational Remediation:** When `switchops-ops` executes a fix (e.g., `scripts/rollback.ps1` or `scripts/rollback.sh`), it interacts directly with Docker containers to revert environment variables, swap image tags back to `v2.13.2`, and verify container health checks.
+
+---
+
 ## 💡 Why Switch is Central
 
 Without Switch, this workflow cannot exist:
-1. **State Persistence & Resilience**: Switch maintains an immutable append-only event log for every room. If `switchops-ops` or `switchops-radar` crashes or restarts mid-incident, it rejoins the room, replays unhandled events, detects that human `APPROVE` was granted, and resumes execution seamlessly without requiring manual re-triage.
+1. **State Persistence & Resilience**: Switch keeps a persistent log for every room, so the alert, diagnosis, approval, rollback, and postmortem stay in one history that agents and humans can both read, even across sessions.
 2. **Shared Team Context**: Agents and humans share the exact same room timeline, rules, and history.
 3. **Agent-to-Agent Coordination**: `switchops-radar` and `switchops-ops` communicate in-thread via Switch addressing (`anyone` and `owner_and_owner_agents`).
-4. **Strict Human Safety Gate**: `switchops-ops` listens to the channel but enforces human sign-off before executing any operational change.
+4. **Strict Human Safety Gate**: `switchops-ops` listens to the channel and is instructed to wait for human sign-off before executing any operational change.
 5. **Platform Agnostic**: Works seamlessly whether the team uses Mattermost (zero-config local Docker), Slack, Discord, or Microsoft Teams.
 
 ---
@@ -130,7 +168,7 @@ SwitchOps integrates with **[Wispr Flow](https://flow.wispr.ai)** for hands-free
 
 ## 🔬 Advanced Tool Execution: Log Deep-Dive
 
-Rather than basic keyword matching, `switchops-radar` leverages a specialized diagnostic tool (`scripts/inspect-logs.py` / `scripts/inspect-logs.ps1`) to parse JSON logs and locate the exact crash line:
+`switchops-radar` can also use an optional diagnostic helper (`scripts/inspect-logs.py` / `scripts/inspect-logs.ps1`, not shown in the demo video) to parse JSON logs and locate the crash line:
 ```json
 {
   "service": "cart-service",
@@ -169,9 +207,9 @@ docker compose up -d --build
 *(Or post a simulated alert message directly into `#incidents`).*
 
 ### 4. Review & Resolve
-1. Review `switchops-radar`'s root-cause analysis in chat (identifying `checkout.py:142`).
+1. Review `switchops-radar`'s diagnosis in chat (it correlates the alert with the v2.14.0 deploy and recommends a rollback).
 2. Type (or voice-dictate with Wispr Flow) **`APPROVE`** in `#incidents`.
-3. Watch `switchops-ops` execute the rollback (`scripts/rollback.sh` / `scripts/rollback.ps1`) and verify recovery.
+3. Watch `switchops-ops` execute the rollback (`scripts/rollback.sh` / `scripts/rollback.ps1`) and verify recovery. If ops asks for it, confirm with `execute rollback to v2.13.2`.
 4. Request the postmortem: `@switchops-radar generate postmortem`.
 
 ---
